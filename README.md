@@ -12,3 +12,7 @@ PROJECT AIM
 - Receive data back (in JSON format)
 - Pull out the specific pieces needed from that data
 - Display them on a webpage in a useful, clean way
+
+TECHNOLOGIES USED 
+- API-Football by API-Sports
+- JavaScript
