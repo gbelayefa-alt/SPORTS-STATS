@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KickStats</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!--Nav Bar-->
+    <nav id="navbar">
+        <div id="nav-logo">
+            <img src="img/logo.png" alt="KickStats Logo" id="logo">
+            <span id="logo-text">Home</span>
+        </div>
+
+        <div id="nav-search">
+            <input type="text" id="search-input" placeholder="Search a player or team" />
+            <button id="search-btn">Search</button>
+        </div>
+
+        <div id="nav-links">
+            <button id="compare-btn" class="nav-btn">H2H</button>
+
+            <div id="league-dropdown">
+                <button id="league-btn" class="nav-btn">League ▾</button>
+                <ul id="league-menu" class="hidden">
+                    <li data-league="39">Premier League</li>
+                    <li data-league="140">La Liga</li>
+                    <li data-league="78">Bundesliga</li>
+                    <li data-league="135">Serie A</li>
+                    <li data-league="61">Ligue 1</li>
+                    <li data-league="2">Champions League</li>
+                    <li data-league="1">World Cup</li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main id="app">
+
+        <!--HOME VIEW-->
+        <section id="home-view">
+            <div id="home-hero">
+                <h2>Welcome to KickStats...Get to know your favourite players</h2>
+                <p>Find players by names or teams. Compare legends. Explore leagues.</p>
+            </div>
+
+            <!--SLIDESHOW -->
+            <div id="achievements">
+                <h3>Award Winners</h3>
+                <div id="slideshow">
+                    <div class="slide active">
+                        <div class="award-label">Ballon d'Or Winners 2025 </div>
+                        <div class="award-name">Ousmane Dembélé and Aitana Bonmatí </div>
+                        <img src="img/bd.jpeg" alt="Ballon d'Or Trophy" class="award-img">
+                    </div>
+
+                    <div class="slide active">
+                        <div class="award-label"> Kopa Trophy 2025 </div>
+                        <div class="award-name">Lamine Yamal</div>
+                        <img src="img/kopa.png" alt="Kopa Trophy" class="award-img">
+                    </div>
+
+                    <div class="slide active">
+                        <div class="award-label"> Yashin Trophy 2025 </div>
+                        <div class="award-name">Gianluigi Donnarumma</div>
+                        <img src="img/yashin.png" alt="Yashin Trophy" class="award-img">
+                    </div>
+                </div>
+
+                <div id="slideshow-dots">
+                    <span class="dot active" data-index="0"></span>
+                    <span class="dot" data-index="1"></span>
+                    <span class="dot" data-index="2"></span>
+                </div>
+            </div>
+        </section>
+
+        <!--PLAYER PROFILE VIEW-->
+        <section id="player-view" class="hidden">
+            <div id="player-profile"></div>
+            <div id="season-search">
+                <input type="number" id="season-input" placeholder="Enter season (e.g. 2023 = 2023/24)" />
+                <button id="season-btn">Get Stats</button>
+            </div>
+            <div id="player-stats"></div>
+        </section>
+
+        <!--TEAM VIEW-->
+        <section id="team-view" class="hidden">
+            <div id="team-profile"></div>
+            <div id="team-stats"></div>
+        </section>
+
+        <!--HEAD-TO-HEAD VIEW-->
+        <section id="compare-view" class="hidden">
+            <h2 id="compare-title">Head-to-Head</h2>
+            <div id="compare-inputs">
+                <div class="compare-col">
+                    <input type="text" id="player1-input" placeholder="Enter first player name" />
+                    <input type="number" id="player1-season" placeholder="Enter season (e.g. 2023 = 2023/24)" />
+                    <button id="player1-btn">Get Player 1</button>
+                    <div id="player1-result"></div>
+                </div>
+                <div class="vs-label">VS</div>
+                <div class="compare-col">
+                    <input type="text" id="player2-input" placeholder="Enter second player name" />
+                    <input type="number" id="player2-season" placeholder="Enter season (e.g. 2023 = 2023/24)" />
+                    <button id="player2-btn">Get Player 2</button>
+                    <div id="player2-result"></div>
+                </div>
+            </div>
+            <div id="compare-table"></div>
+        </section>
+
+        <!--LEAGUE VIEW-->
+        <section id="league-view" class="hidden">
+            <div id="league-header"></div>
+            <div id="league-season-search">
+                <input type="number" id="league-season-input" placeholder="Enter season (e.g. 2023 = 2023/24)" />
+                <button id="league-season-btn">Go</button>
+            </div>
+            <div id="league-stats">
+                <div id="top-scorers"></div>
+                <div id="top-assists"></div>
+            </div>
+
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
