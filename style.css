@@ -318,11 +318,12 @@ body {
 #player-hero {
   position: relative;
   background: linear-gradient(135deg, #0a0e2a 0%, #1a1f4e 50%, #0d1535 100%);
-  min-height: 420px;
+  min-height: 480px;
   display: flex;
   align-items: center;
   overflow: hidden;
-  padding: 2rem 4rem;
+  padding: 2.5rem 4rem;
+  gap: 2rem;
 }
 
 #player-hero::before {
@@ -330,11 +331,22 @@ body {
   position: absolute;
   inset: 0;
   background: radial-gradient(ellipse at 70% 50%, rgba(0, 212, 255, 0.08) 0%, transparent 70%);
+  pointer-events: none;
 }
 
 .hero-left {
   flex: 1;
   z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 55%;
+}
+
+.hero-top-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .hero-position-tag {
@@ -347,13 +359,11 @@ body {
   border-radius: 25px;
   text-transform: uppercase;
   letter-spacing: 1px;
-  margin-bottom: 1rem;
 }
 
 .hero-flag {
   width: 24px;
   height: auto;
-  margin-left: 8px;
   vertical-align: middle;
   border-radius: 2px;
 }
@@ -363,7 +373,6 @@ body {
   font-weight: 900;
   color: var(--text-primary);
   line-height: 1.1;
-  margin-bottom: 1rem;
   text-transform: uppercase;
 }
 
@@ -378,14 +387,30 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 1.5rem;
+}
+
+.hero-team-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.hero-team-logo {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}
+
+.hero-team-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-secondary);
 }
 
 .hero-stat-pills {
   display: flex;
   gap: 0.75rem;
   flex-wrap: wrap;
-  margin-bottom: 1.5rem;
 }
 
 .hero-pill {
@@ -394,6 +419,7 @@ body {
   border-radius: 10px;
   padding: 0.5rem 1rem;
   text-align: center;
+  min-width: 70px;
 }
 
 .hero-pill .pill-value {
@@ -413,24 +439,22 @@ body {
 .hero-bio-row {
   display: flex;
   gap: 0;
+  flex-wrap: wrap;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  padding-top: 1rem;
 }
 
 .bio-cell {
-  padding: 0.6rem 1.25rem;
+  padding: 0.4rem 1.25rem;
   text-align: center;
   border-right: 1px solid rgba(255,255,255,0.1);
 }
 
-.bio-cell:first-child {
-  padding-left: 0;
-}
-
-.bio-cell:last-child {
-  border-right: none;
-}
+.bio-cell:first-child { padding-left: 0; }
+.bio-cell:last-child { border-right: none; }
 
 .bio-cell .bio-value {
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 700;
   color: var(--text-primary);
   display: block;
@@ -444,19 +468,21 @@ body {
 }
 
 .hero-right {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  height: 100%;
+  z-index: 2;
   display: flex;
   align-items: flex-end;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 #player-hero-img {
-  height: 380px;
+  height: 420px;
   width: auto;
   object-fit: contain;
-  filter: drop-shadow(-10px 0 30px rgba(0, 212, 255, 0.2));
+  object-position: top;
+  filter: drop-shadow(-10px 0 30px rgba(0, 212, 255, 0.15));
+  mix-blend-mode: luminosity;
+  opacity: 0.92;
 }
 
 /* Season search */
@@ -482,7 +508,7 @@ body {
   color: var(--text-primary);
   font-size: 0.9rem;
   outline: none;
-  width: 180px;
+  width: 300px;
 }
 
 #season-btn {
@@ -999,8 +1025,14 @@ body {
   }
 
   #player-hero {
-    padding: 2rem 1.5rem;
-    flex-direction: column;
+    position: relative;
+    background: linear-gradient(135deg, #0a0e2a 0%, #1a1f4e 50%, #0d1535 100%);
+    min-height: 480px;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    padding: 2.5rem 4rem;
+    gap: 2rem;
   }
 
   .hero-right {

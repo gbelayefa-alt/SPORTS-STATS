@@ -143,110 +143,116 @@ async function fetchAPI(endpoint) {
 let currentPlayerId = null;
 
 function displayPlayerProfile(playerObj) {
-    const p = playerObj.player;
-    const stats = playerObj.statistics;
-    const firstStat = stats[0];
+  const p = playerObj.player;
+  const stats = playerObj.statistics;
+  const firstStat = stats[0];
 
-    //Save player ID for future reference
-    currentPlayerId = p.id;
+  currentPlayerId = p.id;
 
-    //Get current team from first stats entry 
-    const currentTeam = firstStat?.team?.name || "Unknown";
-    const currentTeamLogo = firstStat?.team?.logo || "";
-    const position = firstStat?.games?.position || "N/A";
-    const number = firstStat?.games?.number || "-";
-    const rating = firstStat?.games?.rating 
-        ? parseFloat(firstStat.games.rating).toFixed(1)
-        : "N/A";
+  const currentTeam = firstStat?.team?.name || "Unknown";
+  const currentTeamLogo = firstStat?.team?.logo || "";
+  const position = firstStat?.games?.position || "N/A";
+  const number = firstStat?.games?.number || "-";
+  const rating = firstStat?.games?.rating
+    ? parseFloat(firstStat.games.rating).toFixed(1)
+    : "N/A";
 
-    //Total across all competitions this season 
-    const totalGoals = stats.reduce((sum, s) => sum + (s.goals?.total || 0), 0);
-    const totalAssists = stats.reduce((sum, s) => sum + (s.goals?.assists || 0), 0);
-    const totalApps = stats.reduce((sum, s) => sum + (s.games?.appearences || 0), 0);
-    const totalMinutes = stats.reduce((sum, s) => sum + (s.games?.minutes || 0), 0);
+  const totalGoals = stats.reduce((sum, s) => sum + (s.goals?.total || 0), 0);
+  const totalAssists = stats.reduce((sum, s) => sum + (s.goals?.assists || 0), 0);
+  const totalApps = stats.reduce((sum, s) => sum + (s.games?.appearences || 0), 0);
+  const totalMinutes = stats.reduce((sum, s) => sum + (s.games?.minutes || 0), 0);
 
-    document.getElementById("player-profile").innerHTML = `
-        <div id="player-hero">
-            <div class="hero-left">
+  const countryCode = getCountryCode(p.nationality);
 
-                <div class="hero-top-row">
-                    <span class="hero-position-tag">${position}</span>
-                    <img
-                        src="https://flagcdn.com/24x18/${getCountryCode(p.nationality)}.png"
-                        alt="${p.nationality}"
-                        class="hero-flag"
-                        onerror="this.style.display='none'"
-                    />
-                    <span class="hero-nationality">${p.nationality}</span>
-                </div>
+  document.getElementById("player-profile").innerHTML = `
+    <div id="player-hero">
 
-                <div class="hero-name">${p.name}</div>
-                <div class="hero-number">#${number}</div>
-                <div class="hero-team-row">
-                    <img src="${currentTeamLogo}" alt="${currentTeam}" class="hero-team-logo" onerror="this.src='img/placeholder.png'"/>
-                    <span class="hero-team-name">${currentTeam}</span>
-                </div>
-            </div>
-
-            <div class="hero-stat-pills">
-                <div class="hero-pill">
-                    <span class="pill-value">${totalGoals}</span>
-                    <span class="pill-label">Goals</span>
-                </div>
-                <div class="hero-pill">
-                    <span class="pill-value">${totalAssists}</span>
-                    <span class="pill-label">Assists</span>
-                </div>
-                <div class="hero-pill">
-                    <span class="pill-value">${totalApps}</span>
-                    <span class="pill-label">Appearances</span>
-                </div>
-                <div class="hero-pill">
-                    <span class="pill-value">${totalMinutes}</span>
-                    <span class="pill-label">Minutes</span>
-                </div>
-                <div class="hero-pill">
-                    <span class="pill-value">${rating}</span>
-                    <span class="pill-label">Rating</span>
-                </div>
-            </div>
-
-            <div class="hero-bio-row">
-                <div class="hero-bio-cell">
-                    <span class="bio-value">${p.birth?.date || "N/A"}</span>
-                    <span class="bio-label">Date of Birth</span>
-                </div>
-                <div class="hero-bio-cell">
-                    <span class="bio-value">${p.nationality || "N/A"}</span>
-                    <span class="bio-label">Nationality</span>
-                </div>
-                <div class="hero-bio-cell">
-                    <span class="bio-value">${p.height || "N/A"}</span>
-                    <span class="bio-label">Height</span>
-                </div>
-                <div class="hero-bio-cell">
-                    <span class="bio-value">${p.weight || "N/A"}</span>
-                    <span class="bio-label">Weight</span>
-                </div>
-                <div class="hero-bio-cell">
-                    <span class="bio-value">${p.age || "N/A"}</span>
-                    <span class="bio-label">Age</span>
-                </div>
-            </div>
+      <div class="hero-left">
+        <div class="hero-top-row">
+          <span class="hero-position-tag">${position}</span>
+          <img
+            src="https://flagcdn.com/24x18/${countryCode}.png"
+            alt="${p.nationality}"
+            class="hero-flag"
+            onerror="this.style.display='none'"
+          />
+          <span style="font-size:0.9rem; color:var(--text-secondary);">${p.nationality}</span>
         </div>
 
-        <div class="hero-right">
-            <img
-                id="player-hero-img"
-                src="${p.photo}"
-                alt="${p.name}"
-                onerror="this.src='img/placeholder.png'"
-            />
-        </div>
-    `;
+        <div class="hero-name">${p.name}</div>
 
-    //Clear previous stats table
-    document.getElementById("player-stats").innerHTML = "";
+        ${number && number !== "-" ? `<div class="hero-number">#${number}</div>` : ""}
+
+        <div class="hero-team-row">
+          <img
+            src="${currentTeamLogo}"
+            alt="${currentTeam}"
+            class="hero-team-logo"
+            onerror="this.style.display='none'"
+          />
+          <span class="hero-team-name">${currentTeam}</span>
+        </div>
+
+        <div class="hero-stat-pills">
+          <div class="hero-pill">
+            <span class="pill-value">${totalGoals}</span>
+            <span class="pill-label">Goals</span>
+          </div>
+          <div class="hero-pill">
+            <span class="pill-value">${totalAssists}</span>
+            <span class="pill-label">Assists</span>
+          </div>
+          <div class="hero-pill">
+            <span class="pill-value">${totalApps}</span>
+            <span class="pill-label">Apps</span>
+          </div>
+          <div class="hero-pill">
+            <span class="pill-value">${totalMinutes}</span>
+            <span class="pill-label">Mins</span>
+          </div>
+          <div class="hero-pill">
+            <span class="pill-value">${rating}</span>
+            <span class="pill-label">Rating</span>
+          </div>
+        </div>
+
+        <div class="hero-bio-row">
+          <div class="bio-cell">
+            <span class="bio-value">${p.birth?.date || "N/A"}</span>
+            <span class="bio-label">Date of Birth</span>
+          </div>
+          <div class="bio-cell">
+            <span class="bio-value">${p.nationality || "N/A"}</span>
+            <span class="bio-label">Nationality</span>
+          </div>
+          <div class="bio-cell">
+            <span class="bio-value">${p.height || "N/A"}</span>
+            <span class="bio-label">Height</span>
+          </div>
+          <div class="bio-cell">
+            <span class="bio-value">${p.weight || "N/A"}</span>
+            <span class="bio-label">Weight</span>
+          </div>
+          <div class="bio-cell">
+            <span class="bio-value">${p.age || "N/A"}</span>
+            <span class="bio-label">Age</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-right">
+        <img
+          id="player-hero-img"
+          src="${p.photo}"
+          alt="${p.name}"
+          onerror="this.src='img/placeholder.png'"
+        />
+      </div>
+
+    </div>
+  `;
+
+  document.getElementById("player-stats").innerHTML = "";
 }
 
 // COUNTRY CODE HELPER
