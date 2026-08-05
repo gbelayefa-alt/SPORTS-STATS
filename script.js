@@ -87,30 +87,52 @@ let selectedLeagueId = null;
 let selectedLeagueName = "";
 
 //SEARCH 
+function normalizeQuery(str) {
+    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
 document.getElementById("search-btn").addEventListener("click", handleSearch);
 document.getElementById("search-input").addEventListener("keydown", (e) => {
     if (e.key === "Enter") handleSearch();
 });
 
 async function handleSearch() {
-  const query = document.getElementById("search-input").value.trim();
-  if (!query) return;
+  const rawQuery = document.getElementById("search-input").value.trim();
+  const season = document.getElementById("season-input").value.trim() || "2024";
+  if (!rawQuery) return;
+
+  const query = normalizeQuery(rawQuery);
 
   // Show loading state
-  document.getElementById("player-profile").innerHTML = `<div class="loading">Searching...</div>`;
+  document.getElementById("player-info-bar").innerHTML = `<div class="loading">Searching for "${rawQuery}"...</div>`;
+  document.getElementById("player-stats").innerHTML = "";
   showView("player");
 
   // API-Football search works best with a league specified
   // Try top leagues in sequence until we find the player
-  const leaguesToTry = [39, 140, 78, 135, 61, 2, 1, 3, 848];
+  const leaguesToTry = [
+  39,   // Premier League
+  140,  // La Liga
+  78,   // Bundesliga
+  135,  // Serie A
+  61,   // Ligue 1
+  2,    // UCL
+  1,    // World Cup
+  3,    // Europa League
+  848,  // Conference League
+  307,  // Saudi Pro League
+  253,  // MLS
+  88,   // Eredivisie
+  203,  // Süper Lig (Turkey)
+];
 
   for (const leagueId of leaguesToTry) {
     const playerData = await fetchAPI(
-      `/players?search=${encodeURIComponent(query)}&league=${leagueId}&season=2024`
+      `/players?search=${encodeURIComponent(query)}&league=${leagueId}&season=${season}`
     );
 
     if (playerData.results > 0) {
-      displayPlayerProfile(playerData.response[0]);
+      displayPlayerProfile(playerData.response[0], season);
       return;
     }
   }
@@ -125,8 +147,8 @@ async function handleSearch() {
   }
 
   // Nothing found anywhere
-  document.getElementById("player-profile").innerHTML =
-    `<div class="error-msg">No player or team found for "${query}". Try checking the spelling or use the player's full name.</div>`;
+  document.getElementById("player-info-bar").innerHTML =
+    `<div class="error-msg">No results found for "${query}". Try checking the spelling or use the player's full name.</div>`;
 }
 
 //API HELPER
@@ -139,121 +161,235 @@ async function fetchAPI(endpoint) {
     return data;
 }
 
-// PLAYER PROFILE 
-let currentPlayerId = null;
-
-function displayPlayerProfile(playerObj) {
+// PLAYER STATS
+function displayPlayerStats(playerObj, season) {
   const p = playerObj.player;
   const stats = playerObj.statistics;
-  const firstStat = stats[0];
+  
+  const seasonLabel = `${season}/${String(parseInt(season) + 1).slice(-2)}`;
 
-  currentPlayerId = p.id;
-
-  const currentTeam = firstStat?.team?.name || "Unknown";
-  const currentTeamLogo = firstStat?.team?.logo || "";
-  const position = firstStat?.games?.position || "N/A";
-  const number = firstStat?.games?.number || "-";
-  const rating = firstStat?.games?.rating
-    ? parseFloat(firstStat.games.rating).toFixed(1)
-    : "N/A";
-
-  const totalGoals = stats.reduce((sum, s) => sum + (s.goals?.total || 0), 0);
-  const totalAssists = stats.reduce((sum, s) => sum + (s.goals?.assists || 0), 0);
-  const totalApps = stats.reduce((sum, s) => sum + (s.games?.appearences || 0), 0);
-  const totalMinutes = stats.reduce((sum, s) => sum + (s.games?.minutes || 0), 0);
-
+  //----INFO BAR ---
   const countryCode = getCountryCode(p.nationality);
 
-  document.getElementById("player-profile").innerHTML = `
-    <div id="player-hero">
-
-      <div class="hero-left">
-        <div class="hero-top-row">
-          <span class="hero-position-tag">${position}</span>
+  document.getElementById("player-info-bar").innerHTML = `
+    <div id="player-info">
+      <div class="player-info-photo">
           <img
-            src="https://flagcdn.com/24x18/${countryCode}.png"
-            alt="${p.nationality}"
-            class="hero-flag"
-            onerror="this.style.display='none'"
+            src="${p.photo}"
+            alt="${p.name}"
+            onerror="this.src='img/placeholder.png'"
           />
-          <span style="font-size:0.9rem; color:var(--text-secondary);">${p.nationality}</span>
-        </div>
-
-        <div class="hero-name">${p.name}</div>
-
-        ${number && number !== "-" ? `<div class="hero-number">#${number}</div>` : ""}
-
-        <div class="hero-team-row">
-          <img
-            src="${currentTeamLogo}"
-            alt="${currentTeam}"
-            class="hero-team-logo"
-            onerror="this.style.display='none'"
-          />
-          <span class="hero-team-name">${currentTeam}</span>
-        </div>
-
-        <div class="hero-stat-pills">
-          <div class="hero-pill">
-            <span class="pill-value">${totalGoals}</span>
-            <span class="pill-label">Goals</span>
-          </div>
-          <div class="hero-pill">
-            <span class="pill-value">${totalAssists}</span>
-            <span class="pill-label">Assists</span>
-          </div>
-          <div class="hero-pill">
-            <span class="pill-value">${totalApps}</span>
-            <span class="pill-label">Apps</span>
-          </div>
-          <div class="hero-pill">
-            <span class="pill-value">${totalMinutes}</span>
-            <span class="pill-label">Mins</span>
-          </div>
-          <div class="hero-pill">
-            <span class="pill-value">${rating}</span>
-            <span class="pill-label">Rating</span>
-          </div>
-        </div>
-
-        <div class="hero-bio-row">
-          <div class="bio-cell">
-            <span class="bio-value">${p.birth?.date || "N/A"}</span>
-            <span class="bio-label">Date of Birth</span>
-          </div>
-          <div class="bio-cell">
-            <span class="bio-value">${p.nationality || "N/A"}</span>
-            <span class="bio-label">Nationality</span>
-          </div>
-          <div class="bio-cell">
-            <span class="bio-value">${p.height || "N/A"}</span>
-            <span class="bio-label">Height</span>
-          </div>
-          <div class="bio-cell">
-            <span class="bio-value">${p.weight || "N/A"}</span>
-            <span class="bio-label">Weight</span>
-          </div>
-          <div class="bio-cell">
-            <span class="bio-value">${p.age || "N/A"}</span>
-            <span class="bio-label">Age</span>
-          </div>
-        </div>
       </div>
 
-      <div class="hero-right">
-        <img
-          id="player-hero-img"
-          src="${p.photo}"
-          alt="${p.name}"
-          onerror="this.src='img/placeholder.png'"
-        />
+      <div class="player-info-details">
+        <div class="player-info-name">${p.name}</div>
+        <div class="player-info-meta">
+          <span> 
+            <img src="https://flagcdn.com/16x12/${countryCode}.png"
+            onerror="this.style.display='none'" />
+            ${p.nationality}
+          </span>
+          <span>Date of Birth: ${p.birth?.date || "N/A"}</span>
+          <span>Age: ${p.age || "N/A"}</span>
+          <span>Weight: ${p.weight || "N/A"}</span>
+          <span>Height: ${p.height || "N/A"}</span>
+          <span>Position: ${stats[0]?.games?.position || "N/A"}</span>
+        </div>
+        <div class="player-info-season">Season: ${seasonLabel}</div>
       </div>
-
     </div>
-  `;
+    `;
 
-  document.getElementById("player-stats").innerHTML = "";
+    //---STATS PER COMPETITION---
+    if (!stats || stats.length == 0) {
+      document.getElementById("player-stats").innerHTML = 
+        `<div class="error-msg">No stats available for ${p.name} in the ${seasonLabel} season.</div>`;
+      return;
+    }
+
+    const statsHTML = stats.map(s => {
+      const goals = s.goals?.total ?? 0; 
+      const assists = s.goals?.assists ?? 0;
+      const apps = s.games?.appearences ?? 0;
+      const minutes = s.games?.minutes ?? 0;
+      const rating = s.games?.rating ? parseFloat(s.games.rating).toFixed(1) : "N/A";
+      const yellowCards = s.cards?.yellow ?? 0;
+      const redCards = s.cards?.red ?? 0;
+      const shots = s.shots?.total ?? 0;
+      const shotsOn = s.shots?.on ?? 0;
+      const passes = s.passes?.total ?? 0;
+      const passAccuracy = s.passes?.accuracy ?? "N/A";
+      const dribbles = s.dribbles?.success ?? 0;
+
+      return `
+        <div class="stats-competition">
+          <div class="stats-comp-header">
+            <img 
+            src="${s.league?.logo}"
+            alt="${s.league?.name}"
+            class="stats-comp-logo"
+            onerror="this.style.display='none'" 
+          />
+          <div>
+            <div class="stats-comp-name">${s.league?.name || "Unknown League"}</div>
+            <div class="stats-comp-country">${s.league?.country || ""} . ${s.team?.name || ""}</div>
+          </div>
+        </div>
+        
+        <div class="stats-grid">
+          <div class="stat-box">
+            <span class="stat-value">${apps}</span>
+            <span class="stat-label">Appearances</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-value">${minutes}</span>
+            <span class="stat-label">Minutes</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-value">${goals}</span>
+            <span class="stat-label">Goals</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-value">${assists}</span>
+            <span class="stat-label">Assists</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-value">${rating}</span>
+            <span class="stat-label">Rating</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-value">${shots}</span>
+            <span class="stat-label">Shots</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-value">${shotsOn}</span>
+            <span class="stat-label">Shots On Target</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-value">${passes}</span>
+            <span class="stat-label">Passes</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-value">${passAccuracy}</span>
+            <span class="stat-label">Pass Accuracy</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-value">${dribbles}</span>
+            <span class="stat-label">Dribbles</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-value" style="color:#f5c518">${yellowCards}</span>
+            <span class="stat-label">=Cards</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-value" style="color:var(--red)">${redCards}</span>
+            <span class="stat-label">Cards</span>
+          </div>
+        </div> 
+      </div>
+    `;       
+    }).join("");
+
+  document.getElementById("player-stats").innerHTML = statsHTML;
 }
+
+//  TEAM PROFILE 
+async function displayTeamProfile(teamObj) {
+  const team = teamObj.team;
+
+  document.getElementById("team-profile").innerHTML = `
+    <div id="team-header">
+      <img id="team-logo" src="${team.logo}" alt="${team.name}"
+        onerror="this.style.display='none'"/>
+      <div>
+        <div id="team-name">${team.name}</div>
+        <div id="team-country">${team.country || ""}</div>
+      </div>
+    </div>
+    <div id="position-filters">
+      <button class="filter-pill active" data-pos="all">All</button>
+      <button class="filter-pill" data-pos="Goalkeeper">Goalkeepers</button>
+      <button class="filter-pill" data-pos="Defender">Defenders</button>
+      <button class="filter-pill" data-pos="Midfielder">Midfielders</button>
+      <button class="filter-pill" data-pos="Attacker">Forwards</button>
+    </div>
+    <div class="loading">Loading squad...</div>
+  `;
+  showView("team");
+
+  //Fetch squad
+  const squadData = await fetchAPI(`/players/squads?team=${team.id}`);
+
+  if (!squadData.response || squadData.response.length === 0) {
+    document.getElementById("team-profile").querySelector(".loading").outerHTML  =
+      `<div class="error-msg">Squad not available for this team.</div>`;
+    return;
+  }
+
+  const players = squadData.response[0].players;
+  renderSquad(players, "all");
+
+  //Position filter clicks
+  document.querySelectorAll(".filter-pill").forEach(pill => {
+    pill.addEventListener("click", () => {
+      document.querySelectorAll(".filter-pill").forEach(p => p.classList.remove("active"));
+      pill.classList.add("active");
+      renderSquad(players, pill.dataset.pos);
+    });
+  });
+}
+
+function renderSquad(players, posFilter) {
+  const filtered = posFilter === "all"
+    ? players
+    : players.filter(p => p.position === posFilter);
+
+  const html = filtered.map(p => `
+    <div class="player-card" onclick="searchPlayerById(${p.id})">
+      <img src="${p.photo}" alt="${p.name}"
+        onerror="this.src='img/placeholder.png'"/>
+      <div class="player-card-number">${p.number || "-"}</div>
+      <div class="player-card-info">
+        <div class="player-card-name">${p.name}</div>
+        <div class="player-card-pos">${p.position}</div>
+      </div>
+    </div>
+  `).join("");
+
+  let squadGrid = document.getElementById("squad-grid");
+  if (!squadGrid) {
+    const grid = document.createElement("div");
+    grid.id = "squad-grid";
+    document.getElementById("team-profile").appendChild(grid);
+    squadGrid = grid;
+  }
+  squadGrid.innerHTML = html || `<div class="error-msg">No players found for this position.</div>`;
+}
+
+//Click a player card in team view -> go to their stats 
+async function searchPlayerById(playerId) {
+  const season = document.getElementById("season-input").value.trim() || "2024";
+  document.getElementById("player-info-bar").innerHTML = 
+    `<div class="loading">Loading player...</div>`;
+  showView("player");
+
+  const data = await fetchAPI(`/players?id=${playerId}&season=${season}`);
+  if (data.results > 0) {
+    displayPlayerStats(data.response[0], season);
+  }else {
+    document.getElementById("player-info-bar").innerHTML = 
+      `<div class="error-msg">Stats not available for this player.</div>`;
+  }
+}
+
+//LEAGUE PAGE 
+function loadLeagueHeader() {
+  document.getElementById("league-header").innerHTML = `
+    <h2>${selectedLeagueName}</h2>
+  `;
+}
+
+
 
 // COUNTRY CODE HELPER
 function getCountryCode(nationality) {
@@ -268,5 +404,5 @@ function getCountryCode(nationality) {
         "Austria": "at", "Turkey": "tr", "Serbia": "rs", "Algeria": "dz",
         "Cameroon": "cm", "Mali": "ml", "Guinea": "gn", "Canada": "ca"
     };
-    return map[nationality] || "unknown";
+    return map[nationality] || "un";
 }

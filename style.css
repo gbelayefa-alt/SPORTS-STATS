@@ -60,6 +60,10 @@ body {
   flex-shrink: 0;
 }
 
+#nav-logo:hover {
+  border-color: var(--accent);
+}
+
 #logo {
   height: 44px;
   width: auto;
@@ -77,7 +81,22 @@ body {
   align-items: center;
   gap: 0.5rem;
   flex: 1;
-  max-width: 480px;
+  max-width: 50%;
+}
+
+#season-input {
+  width: 160px;
+  padding: 0.55rem 1rem;
+  border-radius: 25px;
+  background: rgba(255, 255, 255, 0, 0.05);
+  border: 1px solid rgba(0, 212, 255, 0.03);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  outline: none;
+}
+
+#season-input::placeholder {
+  color: var(--text-muted);
 }
 
 #search-input {
@@ -309,12 +328,12 @@ body {
   transform: scale(1.3);
 }
 
-/* PLAYER PROFILE VIEW */
+/* PLAYER PROFILE VIEW 
 #player-view {
   min-height: calc(100vh - var(--nav-height));
 }
 
-/* Hero banner */
+//Hero banner
 #player-hero {
   position: relative;
   background: linear-gradient(135deg, #0a0e2a 0%, #1a1f4e 50%, #0d1535 100%);
@@ -484,6 +503,60 @@ body {
   mix-blend-mode: luminosity;
   opacity: 0.92;
 }
+*/
+
+/*PLAYER INFO BAR */ 
+#player-info {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.5rem 2rem;
+  background: var(--bg-card);
+  border-bottom: 1px solid rgba(o, 212, 255, 0.1); 
+}
+
+.player-info-photo img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: top;
+  border: 2px solid var(--accent);
+}
+
+.player-info-name {
+  font-size: 1.4rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  margin-bottom: 0.4rem;
+}
+
+.player-info-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.player-info-meta span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.player-info-season {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+#player-stats { padding: 2rem; }
+
+
 
 /* Season search */
 #season-search {
