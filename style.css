@@ -58,10 +58,15 @@ body {
   gap: 0.6rem;
   cursor: pointer;
   flex-shrink: 0;
+  padding: 0.3rem 0.75rem;
+  border-radius: 25px;
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  transition: all 0.2s;
 }
 
 #nav-logo:hover {
   border-color: var(--accent);
+  background: rgba(0, 212, 255, 0.05)
 }
 
 #logo {

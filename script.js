@@ -98,7 +98,13 @@ document.getElementById("search-input").addEventListener("keydown", (e) => {
 
 async function handleSearch() {
   const rawQuery = document.getElementById("search-input").value.trim();
-  const season = document.getElementById("season-input").value.trim() || "2024";
+  const season = document.getElementById("season-input").value.trim();
+  if (!season) {
+    document.getElementById("player-info-bar").innerHTML =
+      `<div class="error-msg">Please enter a season year (>= 2000) before searching.</div>`;
+    showView("player");
+    return;
+  }
   if (!rawQuery) return;
 
   const query = normalizeQuery(rawQuery);
@@ -111,44 +117,68 @@ async function handleSearch() {
   // API-Football search works best with a league specified
   // Try top leagues in sequence until we find the player
   const leaguesToTry = [
-  39,   // Premier League
-  140,  // La Liga
-  78,   // Bundesliga
-  135,  // Serie A
-  61,   // Ligue 1
-  2,    // UCL
-  1,    // World Cup
-  3,    // Europa League
-  848,  // Conference League
-  307,  // Saudi Pro League
-  253,  // MLS
-  88,   // Eredivisie
-  203,  // Süper Lig (Turkey)
-];
+    39,   // Premier League
+    140,  // La Liga
+    78,   // Bundesliga
+    135,  // Serie A
+    61,   // Ligue 1
+    2,    // UCL
+    1,    // World Cup
+    3,    // Europa League
+    848,  // Conference League
+    307,  // Saudi Pro League
+    253,  // MLS
+    88,   // Eredivisie
+    203,  // Süper Lig (Turkey)
+  ];
+
+  let found = false;
 
   for (const leagueId of leaguesToTry) {
-    const playerData = await fetchAPI(
-      `/players?search=${encodeURIComponent(query)}&league=${leagueId}&season=${season}`
-    );
+    try { 
+      const playerData = await fetchAPI(
+        `/players?search=${encodeURIComponent(query)}&league=${leagueId}&season=${season}`
+      );
 
-    if (playerData.results > 0) {
-      displayPlayerProfile(playerData.response[0], season);
+      if (playerData.errors && Object.keys(playerData.errors).length > 0) {
+        document.getElementById("player-info-bar").innerHTML = 
+        `<div class="error-msg">API limit reached for today. Please try again tomorrow.</div>`;
+        return;
+      }
+
+      if (playerData.results > 0) {
+        const playerId = playerData.response[0].player.id;
+        const fullData = await fetchAPI(`/players?id=${playerId}&season=${season}`);
+        if (fullData.results > 0) {
+          displayPlayerStats(fullData.response[0], season);
+        } else {
+          displayPlayerStats(playerData.response[0], season);
+        }
+        found = true;
+        break;
+      }
+
+    } catch (err) {
+      document.getElementById("player-info-bar").innerHTML = 
+        `<div class="error-msg">Connection error. Check your internet and try again.</div>`;
+      return;
+    }    
+  }
+
+    // If still nothing, try as a team
+  if (!found) { 
+    const teamData = await fetchAPI(`/teams?search=${encodeURIComponent(query)}`);
+
+    if (teamData.results > 0) {
+      displayTeamProfile(teamData.response[0]);
+      showView("team");
       return;
     }
+
+    // Nothing found anywhere
+    document.getElementById("player-info-bar").innerHTML =
+      `<div class="error-msg">No results found for "${query}". Try checking the spelling or use the player's full name.</div>`;
   }
-
-  // If still nothing, try as a team
-  const teamData = await fetchAPI(`/teams?search=${encodeURIComponent(query)}`);
-
-  if (teamData.results > 0) {
-    displayTeamProfile(teamData.response[0]);
-    showView("team");
-    return;
-  }
-
-  // Nothing found anywhere
-  document.getElementById("player-info-bar").innerHTML =
-    `<div class="error-msg">No results found for "${query}". Try checking the spelling or use the player's full name.</div>`;
 }
 
 //API HELPER
@@ -218,7 +248,10 @@ function displayPlayerStats(playerObj, season) {
       const shots = s.shots?.total ?? 0;
       const shotsOn = s.shots?.on ?? 0;
       const passes = s.passes?.total ?? 0;
-      const passAccuracy = s.passes?.accuracy ?? "N/A";
+      const foulsCommitted = s.fouls?.committed ?? 0;
+      const foulsDrawn = s.fouls?.drawn ?? 0;
+      const tackles = s.tackles?.total ?? 0;
+
       const dribbles = s.dribbles?.success ?? 0;
 
       return `
@@ -270,20 +303,28 @@ function displayPlayerStats(playerObj, season) {
             <span class="stat-label">Passes</span>
           </div>
           <div class="stat-box">
-            <span class="stat-value">${passAccuracy}</span>
-            <span class="stat-label">Pass Accuracy</span>
+            <span class="stat-value">${foulsCommitted}</span>
+            <span class="stat-label">Fouls Committed</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-value">${foulsDrawn}</span>
+            <span class="stat-label">Fouls Drawn</span>
           </div>
           <div class="stat-box">
             <span class="stat-value">${dribbles}</span>
-            <span class="stat-label">Dribbles</span>
+            <span class="stat-label">Successful Dribbles</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-value">${tackles}</span>
+            <span class="stat-label">Tackles</span>
           </div>
           <div class="stat-box">
             <span class="stat-value" style="color:#f5c518">${yellowCards}</span>
-            <span class="stat-label">=Cards</span>
+            <span class="stat-label">Yellow Cards</span>
           </div>
           <div class="stat-box">
             <span class="stat-value" style="color:var(--red)">${redCards}</span>
-            <span class="stat-label">Cards</span>
+            <span class="stat-label">Red Cards</span>
           </div>
         </div> 
       </div>
