@@ -67,9 +67,8 @@ leagueBtn.addEventListener("click", (e) => {
 });
 
 // Close dropdown if clicking anywhere else 
-document.addEventListener("click", () => {
-    leagueMenu.classList.add("hidden"); 
-});
+//document.addEventListener("click", () => {
+    //leagueMenu.classList.add("hidden"); });
 
 //League item click -> league view
 document.querySelectorAll("#league-menu li").forEach(item => {
@@ -101,11 +100,19 @@ async function handleSearch() {
   const season = document.getElementById("season-input").value.trim();
   if (!season) {
     document.getElementById("player-info-bar").innerHTML =
-      `<div class="error-msg">Please enter a season year (>= 2000) before searching.</div>`;
+      `<div class="error-msg">Please enter a season between 2010 and 2024 before searching.</div>`;
     showView("player");
     return;
   }
   if (!rawQuery) return;
+
+  const seasonNum = parseInt(season);
+  if (seasonNum < 2010 || seasonNum > 2024) {
+    document.getElementById("player-info-bar").innerHTML = 
+      `<div class="error-msg">Please enter a season between 2010 and 2024.</div>`;
+      showView("player");
+      return;
+  }
 
   const query = normalizeQuery(rawQuery);
 
@@ -132,7 +139,9 @@ async function handleSearch() {
     203,  // Süper Lig (Turkey)
   ];
 
-  let found = false;
+  //Collect all matching players across leagues 
+  const allPlayers = [];
+  const seenIds = new Set();
 
   for (const leagueId of leaguesToTry) {
     try { 
@@ -147,15 +156,14 @@ async function handleSearch() {
       }
 
       if (playerData.results > 0) {
-        const playerId = playerData.response[0].player.id;
-        const fullData = await fetchAPI(`/players?id=${playerId}&season=${season}`);
-        if (fullData.results > 0) {
-          displayPlayerStats(fullData.response[0], season);
-        } else {
-          displayPlayerStats(playerData.response[0], season);
-        }
-        found = true;
-        break;
+        playerData.response.forEach(item => {
+          if (!seenIds.has(item.player.id)) {
+              seenIds.add(item.player.id);
+              allPlayers.push(item);
+          }
+        });
+        //Stop early after some results 
+        if (allPlayers.length >= 5) break;
       }
 
     } catch (err) {
@@ -165,21 +173,92 @@ async function handleSearch() {
     }    
   }
 
-    // If still nothing, try as a team
-  if (!found) { 
-    const teamData = await fetchAPI(`/teams?search=${encodeURIComponent(query)}`);
+  //If only one result load directly
+  if (allPlayers.length === 1) {
+    const playerId = allPlayers[0].player.id;
+    const fullData = await fetchAPI(`/players?id=${playerId}&season=${season}`);
+    displayPlayerStats(fullData.results > 0 ? fullData.response[0] : allPlayers[0], season);
+    return;
+  }
 
+  //Multiple results shows dropdown
+  if (allPlayers.length > 1) {
+    showDropdown(allPlayers, season);
+    document.getElementById("player-info-bar").innerHTML = 
+      `<div class="loading">Select a player from the dropdown.</div>`;
+    return;
+  }
+
+    // If still nothing, try as a team
+  try { 
+    const teamData = await fetchAPI(`/teams?search=${encodeURIComponent(query)}`);
     if (teamData.results > 0) {
       displayTeamProfile(teamData.response[0]);
       showView("team");
       return;
     }
+  } catch (err) {}
 
-    // Nothing found anywhere
-    document.getElementById("player-info-bar").innerHTML =
-      `<div class="error-msg">No results found for "${query}". Try checking the spelling or use the player's full name.</div>`;
-  }
+  // Nothing found anywhere
+  document.getElementById("player-info-bar").innerHTML =
+      `<div class="error-msg">
+        No results found for "${rawQuery}" in the ${season}/${seasonNum + 1} season.<br><br>
+        Tips: Check the spelling. Use just the player's last name. Season must be between 2012-2024
+      </div>`;
 }
+
+//SEARCH DROPDOWN 
+function showDropdown (players, season) {
+  const dropdown = document.getElementById("search-dropdown");
+
+  dropdown.innerHTML = players.map(item => { 
+    const p = item.player;
+    const club = item.statistics[0]?.team?.name || "Unknown club";
+    return `
+    <div class="dropdown-item" data-id="${p.id}">
+      <img src="${p.photo}" alt="${p.name}"
+        onerror="this.src='img/placeholder.png'" />
+      <div class="dropdown-item-info">
+        <span class="dropdown-item-name">${p.name}</span>
+        <span class="dropdown-item-club">${club}</span>
+      </div>
+    </div>
+    `;
+  }).join("");
+
+  dropdown.classList.remove("hidden");
+
+  //Click player from dropdown 
+  dropdown.querySelectorAll(".dropdown-item").forEach(item => {
+    item.addEventListener("click", async () => {
+      dropdown.classList.add("hidden");
+      const playerId = item.dataset.id;
+      const season = document.getElementById("season-input").value.trim();
+
+      document.getElementById("player-info-bar").innerHTML = 
+        `<div class="loading">Loading player stats...</div>`;
+      document.getElementById("player-stats").innerHTML = "";
+        
+      const data = await fetchAPI(`/players?id=${playerId}&season=${season}`);
+      if (data.results > 0) {
+        displayPlayerStats(data.response[0], season);
+      } else { 
+        document.getElementById("player-info-bar").innerHTML = 
+          `<div class="error-msg">Stats not available for this player in ${season}. </div>`;
+      }
+    });
+  });
+}
+
+//Close dropdown when clicking outside 
+document.addEventListener("click", (e) => {
+  const dropdown = document.getElementById("search-dropdown");
+  const wrapper = document.getElementById("search-wrapper");
+  if (wrapper && !wrapper.contains(e.target)) {
+    dropdown.classList.add("hidden");
+  }
+  leagueMenu.classList.add("hidden");
+});
 
 //API HELPER
 async function fetchAPI(endpoint) {

@@ -22,7 +22,10 @@ Description: This is the HTML file for the SPORTS-STATS API website
         </div>
 
         <div id="nav-search">
-            <input type="text" id="search-input" placeholder="Search a player or team" />
+            <div id="search-wrapper"> 
+                <input type="text" id="search-input" placeholder="Search a player or team" />
+                <div id="search-dropdown" class="hidden"></div>
+            </div>
             <input type="number" id="season-input" placeholder="Enter season (e.g. 2023 = 2023/24)" />
             <button id="search-btn">Search</button>
         </div>
