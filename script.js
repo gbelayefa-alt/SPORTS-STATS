@@ -37,7 +37,6 @@ setInterval(() => {
 const views = {
     home: document.getElementById("home-view"),
     player: document.getElementById("player-view"),
-    team: document.getElementById("team-view"),
     compare: document.getElementById("compare-view"),
     league: document.getElementById("league-view")
 };
@@ -188,16 +187,6 @@ async function handleSearch() {
       `<div class="loading">Select a player from the dropdown.</div>`;
     return;
   }
-
-    // If still nothing, try as a team
-  try { 
-    const teamData = await fetchAPI(`/teams?search=${encodeURIComponent(query)}`);
-    if (teamData.results > 0) {
-      displayTeamProfile(teamData.response[0]);
-      showView("team");
-      return;
-    }
-  } catch (err) {}
 
   // Nothing found anywhere
   document.getElementById("player-info-bar").innerHTML =
@@ -411,95 +400,6 @@ function displayPlayerStats(playerObj, season) {
     }).join("");
 
   document.getElementById("player-stats").innerHTML = statsHTML;
-}
-
-//  TEAM PROFILE 
-async function displayTeamProfile(teamObj) {
-  const team = teamObj.team;
-
-  document.getElementById("team-profile").innerHTML = `
-    <div id="team-header">
-      <img id="team-logo" src="${team.logo}" alt="${team.name}"
-        onerror="this.style.display='none'"/>
-      <div>
-        <div id="team-name">${team.name}</div>
-        <div id="team-country">${team.country || ""}</div>
-      </div>
-    </div>
-    <div id="position-filters">
-      <button class="filter-pill active" data-pos="all">All</button>
-      <button class="filter-pill" data-pos="Goalkeeper">Goalkeepers</button>
-      <button class="filter-pill" data-pos="Defender">Defenders</button>
-      <button class="filter-pill" data-pos="Midfielder">Midfielders</button>
-      <button class="filter-pill" data-pos="Attacker">Forwards</button>
-    </div>
-    <div class="loading">Loading squad...</div>
-  `;
-  showView("team");
-
-  //Fetch squad
-  const squadData = await fetchAPI(`/players/squads?team=${team.id}`);
-
-  if (!squadData.response || squadData.response.length === 0) {
-    document.getElementById("team-profile").querySelector(".loading").outerHTML  =
-      `<div class="error-msg">Squad not available for this team.</div>`;
-    return;
-  }
-
-  const players = squadData.response[0].players;
-  renderSquad(players, "all");
-
-  //Position filter clicks
-  document.querySelectorAll(".filter-pill").forEach(pill => {
-    pill.addEventListener("click", () => {
-      document.querySelectorAll(".filter-pill").forEach(p => p.classList.remove("active"));
-      pill.classList.add("active");
-      renderSquad(players, pill.dataset.pos);
-    });
-  });
-}
-
-function renderSquad(players, posFilter) {
-  const filtered = posFilter === "all"
-    ? players
-    : players.filter(p => p.position === posFilter);
-
-  const html = filtered.map(p => `
-    <div class="player-card" onclick="searchPlayerById(${p.id})">
-      <img src="${p.photo}" alt="${p.name}"
-        onerror="this.src='img/placeholder.png'"/>
-      <div class="player-card-number">${p.number || "-"}</div>
-      <div class="player-card-info">
-        <div class="player-card-name">${p.name}</div>
-        <div class="player-card-pos">${p.position}</div>
-      </div>
-    </div>
-  `).join("");
-
-  let squadGrid = document.getElementById("squad-grid");
-  if (!squadGrid) {
-    const grid = document.createElement("div");
-    grid.id = "squad-grid";
-    document.getElementById("team-profile").appendChild(grid);
-    squadGrid = grid;
-  }
-  squadGrid.innerHTML = html || `<div class="error-msg">No players found for this position.</div>`;
-}
-
-//Click a player card in team view -> go to their stats 
-async function searchPlayerById(playerId) {
-  const season = document.getElementById("season-input").value.trim() || "2024";
-  document.getElementById("player-info-bar").innerHTML = 
-    `<div class="loading">Loading player...</div>`;
-  showView("player");
-
-  const data = await fetchAPI(`/players?id=${playerId}&season=${season}`);
-  if (data.results > 0) {
-    displayPlayerStats(data.response[0], season);
-  }else {
-    document.getElementById("player-info-bar").innerHTML = 
-      `<div class="error-msg">Stats not available for this player.</div>`;
-  }
 }
 
 //LEAGUE PAGE 

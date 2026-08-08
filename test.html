@@ -7,19 +7,16 @@
   <pre id="output">Loading...</pre>
 
   <script>
-    fetch("https://v3.football.api-sports.io/status", {
+    fetch("https://v3.football.api-sports.io/players?search=messi&league=140&season=2020", {
       method: "GET",
       headers: {
         "x-apisports-key": "8ac66be1a5262bc5c515ffda84a93b78"
       }
     })
-    .then(response => response.json())
-    .then(data => {
-      document.getElementById("output").textContent = JSON.stringify(data, null, 2);
-    })
-    .catch(error => {
-      document.getElementById("output").textContent = "Error: " + error;
-    });
+    .then(r => r.json())
+    .then(d => console.log(d))
+    .catch(e => console.log("ERROR:", e));
+   
   </script>
 </body>
 </html>
