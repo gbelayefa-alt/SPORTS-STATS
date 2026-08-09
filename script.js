@@ -426,3 +426,224 @@ function getCountryCode(nationality) {
     };
     return map[nationality] || "un";
 }
+
+//H2H COMPARE
+let playerAData = null;
+let playerBData = null;
+let seasonA = null;
+let seasonB = null;
+
+document.getElementById("search-a-btn").addEventListener("click", () => handleCompareSearch("a"));
+document.getElementById("search-b-btn").addEventListener("click", () => handleCompareSearch("b"));
+
+async function handleCompareSearch(side) {
+  const inputId = side === "a" ? "player-a-input" : "player-b-input";
+  const seasonId = side === "a" ? "season-a-input" : "season-b-input";
+  const dropdownId = side === "a" ? "dropdown-a" : "dropdown-b";
+
+  const rawQuery = document.getElementById(inputId).value.trim();
+  const season = document.getElementById(seasonId).value.trim();
+
+  if (!rawQuery) return;
+
+  if (!season) {
+    document.getElementById("compare-status").innerHTML =
+      `<span style="color:var(--red)">Please enter a season for Player ${side.toUpperCase()}.</span>`;
+    return;
+  }
+
+  const seasonNum = parseInt(season);
+  if (seasonNum < 2010 || seasonNum > 2024) {
+    document.getElementById("compare-status").innerHTML =
+      `<span style="color:var(--red)">Season must be between 2010 and 2024.</span>`;
+    return;
+  }
+
+  const query = normalizeQuery(rawQuery);
+  document.getElementById("compare-status").innerHTML =
+    `Searching for Player ${side.toUpperCase()}...`;
+
+  const leaguesToTry = [39, 140, 78, 135, 61, 2, 1, 3, 848, 307, 253, 88, 203];
+  const allPlayers = [];
+  const seenIds = new Set();
+
+  for (const leagueId of leaguesToTry) {
+    try {
+      const data = await fetchAPI(
+        `/players?search=${encodeURIComponent(query)}&league=${leagueId}&season=${season}`
+      );
+      if (data.errors && Object.keys(data.errors).length > 0) {
+        document.getElementById("compare-status").innerHTML =
+          `<span style="color:var(--red)">API limit reached. Try again tomorrow.</span>`;
+        return;
+      }
+      if (data.results > 0) {
+        data.response.forEach(item => {
+          if (!seenIds.has(item.player.id)) {
+            seenIds.add(item.player.id);
+            allPlayers.push(item);
+          }
+        });
+        if (allPlayers.length >= 5) break;
+      }
+    } catch (err) {
+      document.getElementById("compare-status").innerHTML =
+        `<span style="color:var(--red)">Connection error. Are you on localhost:5500?</span>`;
+      return;
+    }
+  }
+
+  if (allPlayers.length === 0) {
+    document.getElementById("compare-status").innerHTML =
+      `<span style="color:var(--red)">No results for "${rawQuery}". Try just the last name or initials like L. Messi.</span>`;
+    return;
+  }
+
+  if (allPlayers.length === 1) {
+    await selectComparePlayer(side, allPlayers[0], season);
+    return;
+  }
+
+  showCompareDropdown(side, allPlayers, season, dropdownId);
+  document.getElementById("compare-status").innerHTML =
+    `Select Player ${side.toUpperCase()} from the dropdown.`;
+}
+
+function showCompareDropdown(side, players, season, dropdownId) {
+  const dropdown = document.getElementById(dropdownId);
+
+  dropdown.innerHTML = players.map(item => {
+    const p = item.player;
+    const club = item.statistics[0]?.team?.name || "Unknown club";
+    return `
+      <div class="dropdown-item" data-id="${p.id}">
+        <img src="${p.photo}" alt="${p.name}"
+             onerror="this.src='img/placeholder.png'" />
+        <div class="dropdown-item-info">
+          <span class="dropdown-item-name">${p.name}</span>
+          <span class="dropdown-item-club">${club}</span>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  dropdown.classList.remove("hidden");
+
+  dropdown.querySelectorAll(".dropdown-item").forEach(item => {
+    item.addEventListener("click", async () => {
+      dropdown.classList.add("hidden");
+      const playerId = item.dataset.id;
+      const chosen = players.find(p => p.player.id == playerId);
+
+      document.getElementById("compare-status").innerHTML =
+        `Loading Player ${side.toUpperCase()}...`;
+
+      const data = await fetchAPI(`/players?id=${playerId}&season=${season}`);
+      const finalData = data.results > 0 ? data.response[0] : chosen;
+      await selectComparePlayer(side, finalData, season);
+    });
+  });
+}
+
+async function selectComparePlayer(side, playerObj, season) {
+  if (side === "a") {
+    playerAData = playerObj;
+    seasonA = season;
+  } else {
+    playerBData = playerObj;
+    seasonB = season;
+  }
+
+  renderCompareBanner(side, playerObj, season);
+
+  document.getElementById("compare-status").innerHTML =
+    playerAData && playerBData
+      ? ""
+      : `Player ${side.toUpperCase()} loaded. Now search Player ${side === "a" ? "B" : "A"}.`;
+
+  if (playerAData && playerBData) {
+    buildH2HTable();
+  }
+}
+
+function renderCompareBanner(side, playerObj, season) {
+  const p = playerObj.player;
+  const club = playerObj.statistics[0]?.team?.name || "Unknown";
+  const seasonLabel = `${season}/${String(parseInt(season) + 1).slice(-2)}`;
+
+  document.getElementById(`banner-${side}`).innerHTML = `
+    <img src="${p.photo}" alt="${p.name}"
+         onerror="this.src='img/placeholder.png'" />
+    <div class="banner-info">
+      <div class="banner-name">${p.name}</div>
+      <div class="banner-club">${club}</div>
+      <div class="banner-season">Season: ${seasonLabel}</div>
+    </div>
+  `;
+
+  document.getElementById("compare-banners").classList.remove("hidden");
+}
+
+function buildH2HTable() {
+  const statsA = playerAData.statistics;
+  const statsB = playerBData.statistics;
+
+  // Aggregate totals across all competitions
+  const total = (stats, key) => stats.reduce((sum, s) => {
+    const keys = key.split(".");
+    let val = s;
+    for (const k of keys) val = val?.[k];
+    return sum + (val ?? 0);
+  }, 0);
+
+  const avgRating = (stats) => {
+    const ratings = stats
+      .filter(s => s.games?.rating)
+      .map(s => parseFloat(s.games.rating));
+    if (ratings.length === 0) return "N/A";
+    return (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1);
+  };
+
+  const metrics = [
+    { label: "Appearances", a: total(statsA, "games.appearences"), b: total(statsB, "games.appearences") },
+    { label: "Minutes", a: total(statsA, "games.minutes"), b: total(statsB, "games.minutes") },
+    { label: "Goals", a: total(statsA, "goals.total"), b: total(statsB, "goals.total") },
+    { label: "Assists", a: total(statsA, "goals.assists"), b: total(statsB, "goals.assists") },
+    { label: "Avg Rating", a: avgRating(statsA), b: avgRating(statsB), noCompare: true },
+    { label: "Shots", a: total(statsA, "shots.total"), b: total(statsB, "shots.total") },
+    { label: "Shots on Target", a: total(statsA, "shots.on"), b: total(statsB, "shots.on") },
+    { label: "Passes", a: total(statsA, "passes.total"), b: total(statsB, "passes.total") },
+    { label: "Dribbles", a: total(statsA, "dribbles.success"), b: total(statsB, "dribbles.success") },
+    { label: "Tackles", a: total(statsA, "tackles.total"), b: total(statsB, "tackles.total") },
+    { label: "Fouls Committed", a: total(statsA, "fouls.committed"), b: total(statsB, "fouls.committed"), lower: true },
+    { label: "Yellow Cards", a: total(statsA, "cards.yellow"), b: total(statsB, "cards.yellow"), lower: true },
+    { label: "Red Cards", a: total(statsA, "cards.red"), b: total(statsB, "cards.red"), lower: true },
+  ];
+
+  const rows = metrics.map(m => {
+    let aWins = false;
+    let bWins = false;
+
+    if (!m.noCompare && m.a !== "N/A" && m.b !== "N/A") {
+      if (m.lower) {
+        aWins = m.a < m.b;
+        bWins = m.b < m.a;
+      } else {
+        aWins = m.a > m.b;
+        bWins = m.b > m.a;
+      }
+    }
+
+    return `
+      <div class="h2h-stat-row">
+        <div class="h2h-val h2h-val-a ${aWins ? "winner" : ""}">${m.a}</div>
+        <div class="h2h-stat-label">${m.label}</div>
+        <div class="h2h-val h2h-val-b ${bWins ? "winner" : ""}">${m.b}</div>
+      </div>
+    `;
+  }).join("");
+
+  document.getElementById("compare-table").innerHTML = rows;
+  document.getElementById("compare-table").classList.remove("hidden");
+  document.getElementById("compare-status").innerHTML = "";
+}

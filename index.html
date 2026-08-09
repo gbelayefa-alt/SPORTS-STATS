@@ -99,23 +99,39 @@ Description: This is the HTML file for the SPORTS-STATS API website
 
         <!--HEAD-TO-HEAD VIEW-->
         <section id="compare-view" class="hidden">
-            <h2 id="compare-title">Head-to-Head</h2>
-            <div id="compare-inputs">
-                <div class="compare-col">
-                    <input type="text" id="player1-input" placeholder="Enter first player name" />
-                    <input type="number" id="player1-season" placeholder="Enter season (e.g. 2023 = 2023/24)" />
-                    <button id="player1-btn">Get Player 1</button>
-                    <div id="player1-result"></div>
-                </div>
-                <div class="vs-label">VS</div>
-                <div class="compare-col">
-                    <input type="text" id="player2-input" placeholder="Enter second player name" />
-                    <input type="number" id="player2-season" placeholder="Enter season (e.g. 2023 = 2023/24)" />
-                    <button id="player2-btn">Get Player 2</button>
-                    <div id="player2-result"></div>
-                </div>
+        <div id="compare-search-area">
+
+            <div class="compare-search-col">
+            <div class="compare-search-wrapper">
+                <input type="text" id="player-a-input" placeholder="Search Player A..." />
+                <div id="dropdown-a" class="search-dropdown hidden"></div>
             </div>
-            <div id="compare-table"></div>
+            <input type="text" inputmode="numeric" id="season-a-input" placeholder="Season (e.g. 2023)" />
+            <button id="search-a-btn" class="compare-search-btn">Search</button>
+            </div>
+
+            <div class="vs-divider">VS</div>
+
+            <div class="compare-search-col">
+            <div class="compare-search-wrapper">
+                <input type="text" id="player-b-input" placeholder="Search Player B..." />
+                <div id="dropdown-b" class="search-dropdown hidden"></div>
+            </div>
+            <input type="text" inputmode="numeric" id="season-b-input" placeholder="Season (e.g. 2022)" />
+            <button id="search-b-btn" class="compare-search-btn">Search</button>
+            </div>
+
+        </div>
+
+        <div id="compare-status"></div>
+
+        <div id="compare-banners" class="hidden">
+            <div id="banner-a" class="compare-banner"></div>
+            <div class="h2h-title">HEAD <span>TO</span> HEAD</div>
+            <div id="banner-b" class="compare-banner"></div>
+        </div>
+
+        <div id="compare-table" class="hidden"></div>
         </section>
 
         <!--LEAGUE VIEW-->
