@@ -4,9 +4,6 @@ Date: August 2nd, 2026
 Description: This is the JAVASCRIPT file for the SPORTS-STATS API website
 */
 
-const apiKey = '8ac66be1a5262bc5c515ffda84a93b78'; 
-const apiURL = "https://v3.football.api-sports.io";
-
 //SLIDESHOW
 const slides = document.querySelectorAll(".slide");
 const dots = document.querySelectorAll(".dot");
@@ -251,9 +248,8 @@ document.addEventListener("click", (e) => {
 
 //API HELPER
 async function fetchAPI(endpoint) {
-    const response = await fetch(apiURL + endpoint, {
-        method: "GET",
-        headers: {"x-apisports-key": apiKey}
+    const response = await fetch(`/api/players?endpoint=${encodeURIComponent(endpoint)}`, {
+        method: "GET"
     });
     const data = await response.json();
     return data;
