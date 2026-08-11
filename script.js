@@ -131,7 +131,6 @@ async function handleSearch() {
     848,  // Conference League
     307,  // Saudi Pro League
     253,  // MLS
-    88,   // Eredivisie
     203,  // Süper Lig (Turkey)
   ];
 
@@ -147,7 +146,7 @@ async function handleSearch() {
 
       if (playerData.errors && Object.keys(playerData.errors).length > 0) {
         document.getElementById("player-info-bar").innerHTML = 
-        `<div class="error-msg">API limit reached for today. Please try again tomorrow.</div>`;
+        `<div class="error-msg">Too many requests right now — please wait a moment and try again.</div>`;
         return;
       }
 
@@ -166,7 +165,10 @@ async function handleSearch() {
       document.getElementById("player-info-bar").innerHTML = 
         `<div class="error-msg">Connection error. Check your internet and try again.</div>`;
       return;
-    }    
+    }
+
+    // Small delay between requests to avoid tripping the per-minute rate limit
+    await new Promise(resolve => setTimeout(resolve, 300));
   }
 
   //If only one result load directly
@@ -470,7 +472,7 @@ async function handleCompareSearch(side) {
       );
       if (data.errors && Object.keys(data.errors).length > 0) {
         document.getElementById("compare-status").innerHTML =
-          `<span style="color:var(--red)">API limit reached. Try again tomorrow.</span>`;
+          `<span style="color:var(--red)">Too many requests right now — please wait a moment and try again.</span>`;
         return;
       }
       if (data.results > 0) {
@@ -487,6 +489,9 @@ async function handleCompareSearch(side) {
         `<span style="color:var(--red)">Connection error. Are you on localhost:5500?</span>`;
       return;
     }
+
+    // Small delay between requests to avoid tripping the per-minute rate limit
+    await new Promise(resolve => setTimeout(resolve, 300));
   }
 
   if (allPlayers.length === 0) {
