@@ -4,6 +4,10 @@ Date: August 2nd, 2026
 Description: This is the JAVASCRIPT file for the SPORTS-STATS API website
 */
 
+// Caches player search results (by "name-season") so repeat searches
+// don't re-call the API. Cleared on page refresh.
+const searchCache = new Map();
+
 //SLIDESHOW
 const slides = document.querySelectorAll(".slide");
 const dots = document.querySelectorAll(".dot");
@@ -110,6 +114,17 @@ async function handleSearch() {
       return;
   }
 
+  const searchBtn = document.getElementById("search-btn");
+  searchBtn.disabled = true;
+
+  try {
+    await runSearch(rawQuery, season, seasonNum);
+  } finally {
+    searchBtn.disabled = false;
+  }
+}
+
+async function runSearch(rawQuery, season, seasonNum) {
   const query = normalizeQuery(rawQuery);
 
   // Show loading state
@@ -125,14 +140,21 @@ async function handleSearch() {
     78,   // Bundesliga
     135,  // Serie A
     61,   // Ligue 1
-    2,    // UCL
-    1,    // World Cup
-    3,    // Europa League
-    848,  // Conference League
-    307,  // Saudi Pro League
-    253,  // MLS
-    203,  // Süper Lig (Turkey)
   ];
+
+  // Reuse results from a previous identical search instead of re-calling the API
+  const cacheKey = `${query}-${season}`;
+  if (searchCache.has(cacheKey)) {
+    const cached = searchCache.get(cacheKey);
+    if (cached.length === 1) {
+      displayPlayerStats(cached[0], season);
+    } else {
+      showDropdown(cached, season);
+      document.getElementById("player-info-bar").innerHTML =
+        `<div class="loading">Select a player from the dropdown.</div>`;
+    }
+    return;
+  }
 
   //Collect all matching players across leagues 
   const allPlayers = [];
@@ -157,8 +179,8 @@ async function handleSearch() {
               allPlayers.push(item);
           }
         });
-        //Stop early after some results 
-        if (allPlayers.length >= 5) break;
+        //Stop as soon as we find any match — saves requests
+        if (allPlayers.length >= 1) break;
       }
 
     } catch (err) {
@@ -169,6 +191,10 @@ async function handleSearch() {
 
     // Small delay between requests to avoid tripping the per-minute rate limit
     await new Promise(resolve => setTimeout(resolve, 300));
+  }
+
+  if (allPlayers.length > 0) {
+    searchCache.set(cacheKey, allPlayers);
   }
 
   //If only one result load directly
@@ -461,37 +487,51 @@ async function handleCompareSearch(side) {
   document.getElementById("compare-status").innerHTML =
     `Searching for Player ${side.toUpperCase()}...`;
 
-  const leaguesToTry = [39, 140, 78, 135, 61, 2, 1, 3, 848, 307, 253, 88, 203];
+  const leaguesToTry = [39, 140, 78, 135, 61];
   const allPlayers = [];
   const seenIds = new Set();
 
-  for (const leagueId of leaguesToTry) {
-    try {
-      const data = await fetchAPI(
-        `/players?search=${encodeURIComponent(query)}&league=${leagueId}&season=${season}`
-      );
-      if (data.errors && Object.keys(data.errors).length > 0) {
+  // Reuse results from a previous identical search instead of re-calling the API
+  const cacheKey = `${query}-${season}`;
+  let usedCache = false;
+  if (searchCache.has(cacheKey)) {
+    allPlayers.push(...searchCache.get(cacheKey));
+    usedCache = true;
+  }
+
+  if (!usedCache) {
+    for (const leagueId of leaguesToTry) {
+      try {
+        const data = await fetchAPI(
+          `/players?search=${encodeURIComponent(query)}&league=${leagueId}&season=${season}`
+        );
+        if (data.errors && Object.keys(data.errors).length > 0) {
+          document.getElementById("compare-status").innerHTML =
+            `<span style="color:var(--red)">Too many requests right now — please wait a moment and try again.</span>`;
+          return;
+        }
+        if (data.results > 0) {
+          data.response.forEach(item => {
+            if (!seenIds.has(item.player.id)) {
+              seenIds.add(item.player.id);
+              allPlayers.push(item);
+            }
+          });
+          if (allPlayers.length >= 1) break;
+        }
+      } catch (err) {
         document.getElementById("compare-status").innerHTML =
-          `<span style="color:var(--red)">Too many requests right now — please wait a moment and try again.</span>`;
+          `<span style="color:var(--red)">Connection error. Are you on localhost:5500?</span>`;
         return;
       }
-      if (data.results > 0) {
-        data.response.forEach(item => {
-          if (!seenIds.has(item.player.id)) {
-            seenIds.add(item.player.id);
-            allPlayers.push(item);
-          }
-        });
-        if (allPlayers.length >= 5) break;
-      }
-    } catch (err) {
-      document.getElementById("compare-status").innerHTML =
-        `<span style="color:var(--red)">Connection error. Are you on localhost:5500?</span>`;
-      return;
+
+      // Small delay between requests to avoid tripping the per-minute rate limit
+      await new Promise(resolve => setTimeout(resolve, 300));
     }
 
-    // Small delay between requests to avoid tripping the per-minute rate limit
-    await new Promise(resolve => setTimeout(resolve, 300));
+    if (allPlayers.length > 0) {
+      searchCache.set(cacheKey, allPlayers);
+    }
   }
 
   if (allPlayers.length === 0) {
