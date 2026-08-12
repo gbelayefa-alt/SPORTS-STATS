@@ -140,6 +140,8 @@ async function runSearch(rawQuery, season, seasonNum) {
     78,   // Bundesliga
     135,  // Serie A
     61,   // Ligue 1
+    253,  // MLS
+    307,  // Saudi Pro League
   ];
 
   // Reuse results from a previous identical search instead of re-calling the API
@@ -179,8 +181,6 @@ async function runSearch(rawQuery, season, seasonNum) {
               allPlayers.push(item);
           }
         });
-        //Stop as soon as we find any match — saves requests
-        if (allPlayers.length >= 1) break;
       }
 
     } catch (err) {
@@ -487,7 +487,7 @@ async function handleCompareSearch(side) {
   document.getElementById("compare-status").innerHTML =
     `Searching for Player ${side.toUpperCase()}...`;
 
-  const leaguesToTry = [39, 140, 78, 135, 61];
+  const leaguesToTry = [39, 140, 78, 135, 61, 253, 307];
   const allPlayers = [];
   const seenIds = new Set();
 
@@ -517,7 +517,6 @@ async function handleCompareSearch(side) {
               allPlayers.push(item);
             }
           });
-          if (allPlayers.length >= 1) break;
         }
       } catch (err) {
         document.getElementById("compare-status").innerHTML =
