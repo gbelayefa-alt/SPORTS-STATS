@@ -100,16 +100,16 @@ async function handleSearch() {
   const season = document.getElementById("season-input").value.trim();
   if (!season) {
     document.getElementById("player-info-bar").innerHTML =
-      `<div class="error-msg">Please enter a season between 2010 and 2024 before searching.</div>`;
+      `<div class="error-msg">Please enter a season between 2022 and 2024 before searching.</div>`;
     showView("player");
     return;
   }
   if (!rawQuery) return;
 
   const seasonNum = parseInt(season);
-  if (seasonNum < 2010 || seasonNum > 2024) {
+  if (seasonNum < 2022 || seasonNum > 2024) {
     document.getElementById("player-info-bar").innerHTML = 
-      `<div class="error-msg">Please enter a season between 2010 and 2024.</div>`;
+      `<div class="error-msg">Please enter a season between 2022 and 2024.</div>`;
       showView("player");
       return;
   }
@@ -217,7 +217,7 @@ async function runSearch(rawQuery, season, seasonNum) {
   document.getElementById("player-info-bar").innerHTML =
       `<div class="error-msg">
         No results found for "${rawQuery}" in the ${season}/${seasonNum + 1} season.<br><br>
-        Tips: Check the spelling. Use just the player's last name. Season must be between 2012-2024
+        Tips: Check the spelling. Use just the player's last name. Season must be between 2022-2024
       </div>`;
 }
 
@@ -480,9 +480,9 @@ async function handleCompareSearch(side) {
   }
 
   const seasonNum = parseInt(season);
-  if (seasonNum < 2010 || seasonNum > 2024) {
+  if (seasonNum < 2022 || seasonNum > 2024) {
     document.getElementById("compare-status").innerHTML =
-      `<span style="color:var(--red)">Season must be between 2010 and 2024.</span>`;
+      `<span style="color:var(--red)">Season must be between 2022 and 2024.</span>`;
     return;
   }
 

@@ -23,10 +23,10 @@ Description: This is the HTML file for the SPORTS-STATS API website
 
         <div id="nav-search">
             <div id="search-wrapper"> 
-                <input type="text" id="search-input" placeholder="Search a player or team" />
+                <input type="text" id="search-input" placeholder="Search a player" />
                 <div id="search-dropdown" class="hidden"></div>
             </div>
-            <input type="number" id="season-input" placeholder="Enter season (e.g. 2023 = 2023/24)" />
+            <input type="number" id="season-input" placeholder="Enter season from 2022 to 2024 (e.g. 2023 = 2023/24)" />
             <button id="search-btn">Search</button>
         </div>
 
@@ -99,39 +99,40 @@ Description: This is the HTML file for the SPORTS-STATS API website
 
         <!--HEAD-TO-HEAD VIEW-->
         <section id="compare-view" class="hidden">
-        <div id="compare-search-area">
+            <h3>Compare players from the top 5 leagues (Premier league, LaLiga, Ligue1, Bundesliga and Serie A)</h3>
+            <div id="compare-search-area">
 
-            <div class="compare-search-col">
-            <div class="compare-search-wrapper">
-                <input type="text" id="player-a-input" placeholder="Search Player A..." />
-                <div id="dropdown-a" class="search-dropdown hidden"></div>
+                <div class="compare-search-col">
+                <div class="compare-search-wrapper">
+                    <input type="text" id="player-a-input" placeholder="Search Player A..." />
+                    <div id="dropdown-a" class="search-dropdown hidden"></div>
+                </div>
+                <input type="text" inputmode="numeric" id="season-a-input" placeholder="Season (e.g. 2023)" />
+                <button id="search-a-btn" class="compare-search-btn">Search</button>
+                </div>
+
+                <div class="vs-divider">VS</div>
+
+                <div class="compare-search-col">
+                <div class="compare-search-wrapper">
+                    <input type="text" id="player-b-input" placeholder="Search Player B..." />
+                    <div id="dropdown-b" class="search-dropdown hidden"></div>
+                </div>
+                <input type="text" inputmode="numeric" id="season-b-input" placeholder="Season (e.g. 2022)" />
+                <button id="search-b-btn" class="compare-search-btn">Search</button>
+                </div>
+
             </div>
-            <input type="text" inputmode="numeric" id="season-a-input" placeholder="Season (e.g. 2023)" />
-            <button id="search-a-btn" class="compare-search-btn">Search</button>
+
+            <div id="compare-status"></div>
+
+            <div id="compare-banners" class="hidden">
+                <div id="banner-a" class="compare-banner"></div>
+                <div class="h2h-title">HEAD <span>TO</span> HEAD</div>
+                <div id="banner-b" class="compare-banner"></div>
             </div>
 
-            <div class="vs-divider">VS</div>
-
-            <div class="compare-search-col">
-            <div class="compare-search-wrapper">
-                <input type="text" id="player-b-input" placeholder="Search Player B..." />
-                <div id="dropdown-b" class="search-dropdown hidden"></div>
-            </div>
-            <input type="text" inputmode="numeric" id="season-b-input" placeholder="Season (e.g. 2022)" />
-            <button id="search-b-btn" class="compare-search-btn">Search</button>
-            </div>
-
-        </div>
-
-        <div id="compare-status"></div>
-
-        <div id="compare-banners" class="hidden">
-            <div id="banner-a" class="compare-banner"></div>
-            <div class="h2h-title">HEAD <span>TO</span> HEAD</div>
-            <div id="banner-b" class="compare-banner"></div>
-        </div>
-
-        <div id="compare-table" class="hidden"></div>
+            <div id="compare-table" class="hidden"></div>
         </section>
 
         <!--LEAGUE VIEW-->
