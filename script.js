@@ -287,7 +287,10 @@ async function fetchAPI(endpoint) {
 function displayPlayerStats(playerObj, season) {
   const p = playerObj.player;
   const stats = playerObj.statistics;
-  
+
+  // Clear the search bar so the next search doesn't require deleting the old query
+  document.getElementById("search-input").value = "";
+
   const seasonLabel = `${season}/${String(parseInt(season) + 1).slice(-2)}`;
 
   //----INFO BAR ---
@@ -487,7 +490,7 @@ async function handleCompareSearch(side) {
   document.getElementById("compare-status").innerHTML =
     `Searching for Player ${side.toUpperCase()}...`;
 
-  const leaguesToTry = [39, 140, 78, 135, 61, 253, 307];
+  const leaguesToTry = [39, 140, 78, 135, 61];
   const allPlayers = [];
   const seenIds = new Set();
 
