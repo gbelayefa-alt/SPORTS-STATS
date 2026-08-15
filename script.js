@@ -6,6 +6,7 @@ Description: This is the JAVASCRIPT file for the SPORTS-STATS API website
 
 // Caches player search results (by "name-season") so repeat searches
 // don't re-call the API. Cleared on page refresh.
+
 const searchCache = new Map();
 
 //SLIDESHOW
@@ -290,6 +291,7 @@ function displayPlayerStats(playerObj, season) {
 
   // Clear the search bar so the next search doesn't require deleting the old query
   document.getElementById("search-input").value = "";
+  document.getElementById("season-input").value = ""
 
   const seasonLabel = `${season}/${String(parseInt(season) + 1).slice(-2)}`;
 

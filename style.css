@@ -681,10 +681,10 @@ body {
 }
 
 #compare-view h3{
-  font-size: 2.5rem;
-  font-weight: 800;
+  font-size: 1.5rem;
   color: var(--text-primary);
-  margin-bottom: 0.5rem;
+  margin-bottom: 2rem;
+  
 }
 
 #compare-search-area {
