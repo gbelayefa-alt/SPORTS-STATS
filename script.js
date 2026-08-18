@@ -524,7 +524,10 @@ function renderLeagueList(container, title, players, statType) {
     return `
       <div class="league-player-row">
         <img src="${p.photo}" alt="${p.name}">
-        <div class="league-player-name">${p.name}</div>
+        <div class="league-player-info">
+          <div class="league-player-name">${p.name}</div>
+          <div class="league-player-team">${stats.team.name}</div>
+        </div>
         <div class="league-player-stat">${statValue}</div>
       </div>
     `;
