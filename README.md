@@ -1,22 +1,26 @@
-# SPORTS-STATS
-This summer project is a football players stats app/website. It is specifically to practice fetching and parsing data from a public API. 
+# KickStats
 
-HOW TO USE  
-- Search for a player by name or a team
-- See player profile - photo, current team, nationality, position, jersey number
-- Pick a season and see their seasonal stats - goals, assists, appearances, minutes played, cards in each competition
-- Pick players from their team to see their stats
-- Use H2H to compare players' statistics in different seasons
-- Pick a tournament from the league drop-down to see the top 5 players with most goals and assists 
+A football (soccer) player stats web app that pulls live data from an external API and displays player profiles, head-to-head comparisons, and league leaderboards.
 
-PROJECT AIM
-- Send a request to an external server
-- Receive data back (in JSON format)
-- Pull out the specific pieces needed from that data
-- Display them on a webpage in a useful, clean way
+**Live site:** https://sports-stats-pi.vercel.app
 
-TECHNOLOGIES USED 
-- API-Football by API-Sports
-- JavaScript
-- HTML
-- CSS
+## How to use
+- Search for a player using their last name and a season between 2022 and 2024
+- View their profile and season stats broken down by competition
+- Use H2H to compare two players' stats side by side for different seasons
+- Pick a league from the dropdown to see the top 10 scorers and top 10 assists for a given season
+
+## What this project practices
+- Fetching and parsing JSON data from a real, external API
+- Handling API rate limits (per-minute and daily) with request throttling and caching
+- Securing an API key server-side using a Vercel Serverless Function, instead of exposing it in client-side code
+- Building a multi-view single-page app with vanilla JavaScript (no frameworks)
+- Designing clean, readable UI states for loading, errors, and empty results
+
+## Technologies used
+- HTML, CSS, JavaScript (vanilla, no frameworks)
+- [API-Football](https://www.api-football.com/) by API-Sports
+- Vercel (deployment + serverless function for API key security)
+
+## Notes
+- Free-tier API limits apply (100 requests/day, 10 requests/minute), so search results are cached client-side and requests are throttled to avoid hitting these limits during normal use.

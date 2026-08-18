@@ -168,9 +168,10 @@ async function runSearch(rawQuery, season, seasonNum) {
         `/players?search=${encodeURIComponent(query)}&league=${leagueId}&season=${season}`
       );
 
-      if (playerData.errors && Object.keys(playerData.errors).length > 0) {
+      const rateLimitMsg = getRateLimitMessage(playerData);
+      if (rateLimitMsg) {
         document.getElementById("player-info-bar").innerHTML = 
-        `<div class="error-msg">Too many requests right now — please wait a moment and try again.</div>`;
+        `<div class="error-msg">${rateLimitMsg}</div>`;
         return;
       }
 
@@ -280,7 +281,19 @@ async function fetchAPI(endpoint) {
         method: "GET"
     });
     const data = await response.json();
+    data.__httpStatus = response.status;
     return data;
+}
+
+// Returns a user-facing message for a rate-limited response, or null if not rate-limited
+function getRateLimitMessage(data) {
+  if (data.__httpStatus === 429) {
+    return "You've reached your daily limit. Please try again tomorrow.";
+  }
+  if (data.errors && Object.keys(data.errors).length > 0) {
+    return "You've reached your limit per minute. Please try again in a moment.";
+  }
+  return null;
 }
 
 // PLAYER STATS
@@ -469,9 +482,10 @@ async function loadLeagueStats() {
       `/players/topscorers?league=${selectedLeagueId}&season=${season}`
     );
 
-    if (scorersData.errors && Object.keys(scorersData.errors).length > 0) {
+    const scorersRateLimitMsg = getRateLimitMessage(scorersData);
+    if (scorersRateLimitMsg) {
       scorersEl.innerHTML = `<div class="league-list-title">Top Scorers</div>
-        <div class="error-msg">Too many requests right now — please wait a moment and try again.</div>`;
+        <div class="error-msg">${scorersRateLimitMsg}</div>`;
       assistsEl.innerHTML = "";
       return;
     }
@@ -485,9 +499,10 @@ async function loadLeagueStats() {
       `/players/topassists?league=${selectedLeagueId}&season=${season}`
     );
 
-    if (assistsData.errors && Object.keys(assistsData.errors).length > 0) {
+    const assistsRateLimitMsg = getRateLimitMessage(assistsData);
+    if (assistsRateLimitMsg) {
       assistsEl.innerHTML = `<div class="league-list-title">Top Assists</div>
-        <div class="error-msg">Too many requests right now — please wait a moment and try again.</div>`;
+        <div class="error-msg">${assistsRateLimitMsg}</div>`;
       return;
     }
 
@@ -608,9 +623,10 @@ async function handleCompareSearch(side) {
         const data = await fetchAPI(
           `/players?search=${encodeURIComponent(query)}&league=${leagueId}&season=${season}`
         );
-        if (data.errors && Object.keys(data.errors).length > 0) {
+        const rateLimitMsg = getRateLimitMessage(data);
+        if (rateLimitMsg) {
           document.getElementById("compare-status").innerHTML =
-            `<span style="color:var(--red)">Too many requests right now — please wait a moment and try again.</span>`;
+            `<span style="color:var(--red)">${rateLimitMsg}</span>`;
           return;
         }
         if (data.results > 0) {

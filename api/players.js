@@ -9,5 +9,9 @@ export default async function handler(req, res) {
   });
 
   const data = await response.json();
-  res.status(200).json(data);
+
+  // Forward the real status code so the frontend can tell a daily-limit
+  // block (429) apart from a normal 200 response that contains a
+  // per-minute rate limit message in its body.
+  res.status(response.status).json(data);
 }
