@@ -6,7 +6,6 @@ Description: This is the JAVASCRIPT file for the SPORTS-STATS API website
 
 // Caches player search results (by "name-season") so repeat searches
 // don't re-call the API. Cleared on page refresh.
-
 const searchCache = new Map();
 
 //SLIDESHOW
@@ -101,16 +100,16 @@ async function handleSearch() {
   const season = document.getElementById("season-input").value.trim();
   if (!season) {
     document.getElementById("player-info-bar").innerHTML =
-      `<div class="error-msg">Please enter a season between 2022 and 2024 before searching.</div>`;
+      `<div class="error-msg">Please enter a season between 2010 and 2024 before searching.</div>`;
     showView("player");
     return;
   }
   if (!rawQuery) return;
 
   const seasonNum = parseInt(season);
-  if (seasonNum < 2022 || seasonNum > 2024) {
+  if (seasonNum < 2010 || seasonNum > 2024) {
     document.getElementById("player-info-bar").innerHTML = 
-      `<div class="error-msg">Please enter a season between 2022 and 2024.</div>`;
+      `<div class="error-msg">Please enter a season between 2010 and 2024.</div>`;
       showView("player");
       return;
   }
@@ -218,7 +217,7 @@ async function runSearch(rawQuery, season, seasonNum) {
   document.getElementById("player-info-bar").innerHTML =
       `<div class="error-msg">
         No results found for "${rawQuery}" in the ${season}/${seasonNum + 1} season.<br><br>
-        Tips: Check the spelling. Use just the player's last name. Season must be between 2022-2024
+        Tips: Check the spelling. Use just the player's last name. Season must be between 2012-2024
       </div>`;
 }
 
@@ -291,7 +290,7 @@ function displayPlayerStats(playerObj, season) {
 
   // Clear the search bar so the next search doesn't require deleting the old query
   document.getElementById("search-input").value = "";
-  document.getElementById("season-input").value = ""
+  document.getElementById("season-input").value = "";
 
   const seasonLabel = `${season}/${String(parseInt(season) + 1).slice(-2)}`;
 
@@ -436,6 +435,102 @@ function loadLeagueHeader() {
   document.getElementById("league-header").innerHTML = `
     <h2>${selectedLeagueName}</h2>
   `;
+  document.getElementById("top-scorers").innerHTML = "";
+  document.getElementById("top-assists").innerHTML = "";
+}
+
+document.getElementById("league-season-btn").addEventListener("click", loadLeagueStats);
+
+async function loadLeagueStats() {
+  const season = document.getElementById("league-season-input").value.trim();
+  const scorersEl = document.getElementById("top-scorers");
+  const assistsEl = document.getElementById("top-assists");
+
+  if (!selectedLeagueId) return;
+
+  if (!season) {
+    scorersEl.innerHTML = `<div class="error-msg">Please enter a season.</div>`;
+    assistsEl.innerHTML = "";
+    return;
+  }
+
+  const seasonNum = parseInt(season);
+  if (seasonNum < 2012 || seasonNum > 2024) {
+    scorersEl.innerHTML = `<div class="error-msg">Please enter a season between 2012 and 2024.</div>`;
+    assistsEl.innerHTML = "";
+    return;
+  }
+
+  scorersEl.innerHTML = `<div class="league-list-title">Top Scorers</div><div class="loading">Loading top scorers...</div>`;
+  assistsEl.innerHTML = `<div class="league-list-title">Top Assists</div><div class="loading">Loading top assists...</div>`;
+
+  try {
+    const scorersData = await fetchAPI(
+      `/players/topscorers?league=${selectedLeagueId}&season=${season}`
+    );
+
+    if (scorersData.errors && Object.keys(scorersData.errors).length > 0) {
+      scorersEl.innerHTML = `<div class="league-list-title">Top Scorers</div>
+        <div class="error-msg">Too many requests right now — please wait a moment and try again.</div>`;
+      assistsEl.innerHTML = "";
+      return;
+    }
+
+    renderLeagueList(scorersEl, "Top Scorers", scorersData.response, "goals");
+
+    // Small delay before the second request to stay under the per-minute limit
+    await new Promise(resolve => setTimeout(resolve, 400));
+
+    const assistsData = await fetchAPI(
+      `/players/topassists?league=${selectedLeagueId}&season=${season}`
+    );
+
+    if (assistsData.errors && Object.keys(assistsData.errors).length > 0) {
+      assistsEl.innerHTML = `<div class="league-list-title">Top Assists</div>
+        <div class="error-msg">Too many requests right now — please wait a moment and try again.</div>`;
+      return;
+    }
+
+    renderLeagueList(assistsEl, "Top Assists", assistsData.response, "assists");
+
+    if (selectedLeagueId && scorersData.response.length > 0) {
+      const leagueLogo = scorersData.response[0].statistics[0].league.logo;
+      document.getElementById("league-header").innerHTML = `
+        <img src="${leagueLogo}" alt="${selectedLeagueName} logo">
+        <h2>${selectedLeagueName}</h2>
+      `;
+    }
+
+  } catch (err) {
+    scorersEl.innerHTML = `<div class="error-msg">Connection error. Check your internet and try again.</div>`;
+    assistsEl.innerHTML = "";
+  }
+}
+
+function renderLeagueList(container, title, players, statType) {
+  if (!players || players.length === 0) {
+    container.innerHTML = `<div class="league-list-title">${title}</div>
+      <div class="error-msg">No data found for this season.</div>`;
+    return;
+  }
+
+  const rows = players.slice(0, 10).map(item => {
+    const p = item.player;
+    const stats = item.statistics[0];
+    const statValue = statType === "goals"
+      ? (stats.goals.total ?? 0)
+      : (stats.goals.assists ?? 0);
+
+    return `
+      <div class="league-player-row">
+        <img src="${p.photo}" alt="${p.name}">
+        <div class="league-player-name">${p.name}</div>
+        <div class="league-player-stat">${statValue}</div>
+      </div>
+    `;
+  }).join("");
+
+  container.innerHTML = `<div class="league-list-title">${title}</div>${rows}`;
 }
 
 
@@ -482,9 +577,9 @@ async function handleCompareSearch(side) {
   }
 
   const seasonNum = parseInt(season);
-  if (seasonNum < 2022 || seasonNum > 2024) {
+  if (seasonNum < 2010 || seasonNum > 2024) {
     document.getElementById("compare-status").innerHTML =
-      `<span style="color:var(--red)">Season must be between 2022 and 2024.</span>`;
+      `<span style="color:var(--red)">Season must be between 2010 and 2024.</span>`;
     return;
   }
 
